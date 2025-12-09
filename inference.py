@@ -1,24 +1,38 @@
 import torch
 from torch import nn
-from transformers import SegformerForSemanticSegmentation, SegformerImageProcessor
+from transformers import AutoModelForSemanticSegmentation, AutoImageProcessor
 from PIL import Image
 import numpy as np
 import os
 import glob
 import re
-from config import MODEL_CHECKPOINT, INFERENCE_SIZE, OUTPUT_DIR
+from config import MODEL_CHECKPOINT, INFERENCE_SIZE, OUTPUT_DIR, INFERENCE_DIR
 from utils import visualize_prediction
 
 def get_latest_checkpoint(output_dir):
     checkpoints = glob.glob(os.path.join(output_dir, "checkpoint-*"))
-    if not checkpoints:
-        return None
-    # Sort by number
-    checkpoints.sort(key=lambda x: int(re.search(r"checkpoint-(\d+)", x).group(1)))
-    return checkpoints[-1]
+    
+    # 1. Try to find a valid checkpoint subfolder
+    if checkpoints:
+        # Sort by number
+        checkpoints.sort(key=lambda x: int(re.search(r"checkpoint-(\d+)", x).group(1)))
+        latest_checkpoint = checkpoints[-1]
+        
+        # Verify if it contains model files (e.g. config.json)
+        if os.path.exists(os.path.join(latest_checkpoint, "config.json")):
+            return latest_checkpoint
+        else:
+            print(f"⚠️ Checkpoint trouvé mais semble vide/invalide : {latest_checkpoint}")
+
+    # 2. If no valid checkpoint found, check if the output_dir itself has the model
+    if os.path.exists(os.path.join(output_dir, "config.json")):
+        print(f"✅ Utilisation du modèle trouvé directement dans : {output_dir}")
+        return output_dir
+
+    return None
 
 # Default model path (can be overridden)
-DEFAULT_MODEL_PATH = get_latest_checkpoint(OUTPUT_DIR)
+DEFAULT_MODEL_PATH = get_latest_checkpoint(INFERENCE_DIR)
 
 def load_model(model_path=None):
     if model_path is None:
@@ -31,9 +45,9 @@ def load_model(model_path=None):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Chargement du modèle depuis {model_path} sur {device}...")
     
-    model = SegformerForSemanticSegmentation.from_pretrained(model_path).to(device)
+    model = AutoModelForSemanticSegmentation.from_pretrained(model_path).to(device)
     # Processor loads base config
-    processor = SegformerImageProcessor.from_pretrained(MODEL_CHECKPOINT)
+    processor = AutoImageProcessor.from_pretrained(MODEL_CHECKPOINT)
     
     return model, processor, device
 
@@ -77,8 +91,8 @@ def predict_image(image_path, model, processor, device):
 
 def main():
     # Example usage
-    test_image_path = "./data/images/Mont_Blanc_Aiguille_du_Midi_2019_01_29_10-30-00_full.jpg"
-    
+    #test_image_path = "./data/new_images/Mont_Blanc_Aiguille_du_Midi_2016_03_11_12-00-00_full_panorama.jpg" # unseen
+    test_image_path = "./data/images/Mont_Blanc_Aiguille_du_Midi_2019_01_29_10-30-00_full.jpg" # seen
     if os.path.exists(test_image_path):
         model, processor, device = load_model()
         orig_img, pred_mask = predict_image(test_image_path, model, processor, device)
