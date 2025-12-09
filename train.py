@@ -77,6 +77,7 @@ def main():
         logging_steps=10,
         remove_unused_columns=False,
         push_to_hub=False,
+        dataloader_pin_memory=torch.cuda.is_available(),
     )
 
     # 6. Trainer
