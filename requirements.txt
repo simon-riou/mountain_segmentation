@@ -1,0 +1,10 @@
+transformers
+evaluate
+scikit-learn
+matplotlib
+Pillow
+torch
+numpy
+accelerate
+albumentations
+opencv-python
