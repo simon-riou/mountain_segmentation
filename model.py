@@ -23,15 +23,17 @@ def freeze_encoder(model, freeze=True):
     Gèle ou dégèle l'encodeur (backbone) du modèle de manière générique.
     """
     # Récupère le modèle de base (backbone) via le préfixe
-    if hasattr(model, "base_model_prefix"):
+    # Attention: certains modèles (ex: UperNet) ont un prefix vide '' qui fait planter getattr
+    if hasattr(model, "base_model_prefix") and model.base_model_prefix:
         base_model = getattr(model, model.base_model_prefix)
     else:
-        # Fallback si pas de prefix (rare pour les modèles HF modernes)
         base_model = model
 
-    # Tente de trouver l'attribut 'encoder' spécifique, sinon utilise le base_model entier
+    # Tente de trouver l'attribut 'encoder' ou 'backbone'
     if hasattr(base_model, "encoder"):
         encoder = base_model.encoder
+    elif hasattr(base_model, "backbone"):
+        encoder = base_model.backbone
     else:
         encoder = base_model
         

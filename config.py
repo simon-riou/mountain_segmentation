@@ -6,7 +6,7 @@ DATA_DIR = "./data"
 IMAGES_DIR = os.path.join(DATA_DIR, "images")
 MASKS_DIR = os.path.join(DATA_DIR, "masks")
 OUTPUT_DIR = "./segformer_montagne_output"
-MODEL_CHECKPOINT = "nvidia/mit-b0"
+MODEL_CHECKPOINT = "microsoft/beit-base-finetuned-ade-640-640"
 
 # ===========================================
 # Model a tester
@@ -14,9 +14,6 @@ MODEL_CHECKPOINT = "nvidia/mit-b0"
 # MODEL_CHECKPOINT = "nvidia/mit-b2"
 # MODEL_CHECKPOINT = "nvidia/mit-b4"
 # MODEL_CHECKPOINT = "nvidia/mit-b5"
-# ===========================================
-# MODEL_CHECKPOINT = "microsoft/beit-base-finetuned-ade-640-640" <-- dimension peut etre pas adaptée a nos images 
-# MODEL_CHECKPOINT = "microsoft/beit-large-finetuned-ade-640-640" <-- dimension peut etre pas adaptée a nos images 
 # ===========================================
 # MODEL_CHECKPOINT = "openmmlab/upernet-swin-tiny"
 # MODEL_CHECKPOINT = "openmmlab/upernet-swin-base"
