@@ -15,13 +15,11 @@ def get_training_transforms():
         A.HorizontalFlip(p=0.5),
         
         # Simulation de légers mouvements de caméra ou de vent
-        A.ShiftScaleRotate(
-            shift_limit=0.1,    # Décalage max 10%
-            scale_limit=0.15,   # Zoom +/- 15%
-            rotate_limit=10,    # Rotation +/- 10°
-            # REFLECT_101 est vital ici : il crée un effet miroir sur les bords.
-            # Cela évite les bordures noires qui faussent l'apprentissage du ciel/neige.
-            border_mode=cv2.BORDER_REFLECT_101, 
+        A.Affine(
+            translate_percent=(-0.1, 0.1), # Décalage max 10%
+            scale=(0.85, 1.15),            # Zoom +/- 15%
+            rotate=(-10, 10),              # Rotation +/- 10°
+            border_mode=cv2.BORDER_REFLECT_101,   # Effet miroir sur les bords
             p=0.8
         ),
         
@@ -30,7 +28,7 @@ def get_training_transforms():
         A.ElasticTransform(
             alpha=1, 
             sigma=50, 
-            alpha_affine=50, 
+            # alpha_affine removed in 2.0
             p=0.2
         ),
 
@@ -57,20 +55,15 @@ def get_training_transforms():
         ], p=0.3),
         
         # Bruit numérique (ISO élevé le matin/soir)
-        A.GaussNoise(var_limit=(10.0, 50.0), p=0.3),
+        A.GaussNoise(p=0.3),
 
         # --- 4. Regularization (Anti-Overfitting critique pour petit dataset) ---
         # CoarseDropout : Crée des trous noirs dans l'image.
         # Force le modèle à utiliser le contexte spatial plutôt que de se focaliser sur une feature unique.
         A.CoarseDropout(
-            max_holes=8, 
-            max_height=32, 
-            max_width=32, 
-            min_holes=2, 
-            min_height=16, 
-            min_width=16, 
-            fill_value=0, 
-            mask_fill_value=None, # Ne pas toucher au masque, ou mettre une classe 'ignore' si gérée
+            num_holes_range=(2, 8),
+            hole_height_range=(16, 32),
+            hole_width_range=(16, 32),
             p=0.5
         ),
     ])
