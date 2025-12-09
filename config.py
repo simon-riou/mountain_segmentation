@@ -8,7 +8,25 @@ MASKS_DIR = os.path.join(DATA_DIR, "masks")
 OUTPUT_DIR = "./segformer_montagne_output"
 MODEL_CHECKPOINT = "nvidia/mit-b0"
 
-# --- HYPERPARAMETERS ---
+# ===========================================
+# Model a tester
+# ===========================================
+# MODEL_CHECKPOINT = "nvidia/mit-b2"
+# MODEL_CHECKPOINT = "nvidia/mit-b4"
+# MODEL_CHECKPOINT = "nvidia/mit-b5"
+# ===========================================
+# MODEL_CHECKPOINT = "microsoft/beit-base-finetuned-ade-640-640" <-- dimension peut etre pas adaptée a nos images 
+# MODEL_CHECKPOINT = "microsoft/beit-large-finetuned-ade-640-640" <-- dimension peut etre pas adaptée a nos images 
+# ===========================================
+# MODEL_CHECKPOINT = "openmmlab/upernet-swin-tiny"
+# MODEL_CHECKPOINT = "openmmlab/upernet-swin-base"
+# MODEL_CHECKPOINT = "openmmlab/upernet-swin-large"
+# ===========================================
+# MODEL_CHECKPOINT = "openmmlab/upernet-convnext-tiny"
+# MODEL_CHECKPOINT = "openmmlab/upernet-convnext-base"
+# ===========================================
+
+
 # --- HYPERPARAMETERS ---
 LR = 0.00006
 BATCH_SIZE = 4  # Ajuster selon VRAM (4 pour 8GB VRAM)
