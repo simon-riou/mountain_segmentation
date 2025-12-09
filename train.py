@@ -2,10 +2,11 @@ import torch
 from transformers import TrainingArguments, Trainer
 from config import (
     MODEL_CHECKPOINT, IMAGES_DIR, MASKS_DIR, OUTPUT_DIR, 
-    LR, EPOCHS, BATCH_SIZE, ID2LABEL, LABEL2ID
+    EPOCHS_FEATURE_EXTRACTION, EPOCHS_FINE_TUNING, BATCH_SIZE, ID2LABEL, LABEL2ID,
+    LR_FEATURE_EXTRACTION, LR_FINE_TUNING
 )
 from dataset import MountainDataset, get_training_transforms
-from model import get_model, get_processor
+from model import get_model, get_processor, freeze_encoder
 from utils import compute_metrics
 import glob
 import os
@@ -64,11 +65,45 @@ def main():
     # 4. Initialize Model
     model = get_model(MODEL_CHECKPOINT, ID2LABEL, LABEL2ID)
 
-    # 5. Training Arguments
-    training_args = TrainingArguments(
-        output_dir=OUTPUT_DIR,
-        learning_rate=LR,
-        num_train_epochs=EPOCHS,
+    # --- PHASE 1: FEATURE EXTRACTION ---
+    print("\n=== PHASE 1: FEATURE EXTRACTION (Encoder Gelé) ===")
+    freeze_encoder(model, freeze=True)
+    
+    args_phase1 = TrainingArguments(
+        output_dir=os.path.join(OUTPUT_DIR, "phase1_feature_extraction"),
+        learning_rate=LR_FEATURE_EXTRACTION,
+        num_train_epochs=EPOCHS_FEATURE_EXTRACTION,
+        per_device_train_batch_size=BATCH_SIZE,
+        per_device_eval_batch_size=BATCH_SIZE,
+        save_total_limit=1,
+        eval_strategy="epoch",
+        save_strategy="epoch",
+        logging_steps=10,
+        remove_unused_columns=False,
+        push_to_hub=False,
+        dataloader_pin_memory=torch.cuda.is_available(),
+        report_to=["tensorboard"],
+        logging_dir=os.path.join(OUTPUT_DIR, "logs", "phase1"),
+    )
+
+    trainer_phase1 = Trainer(
+        model=model,
+        args=args_phase1,
+        train_dataset=train_dataset,
+        eval_dataset=val_dataset,
+        compute_metrics=compute_metrics,
+    )
+    
+    trainer_phase1.train()
+    
+    # --- PHASE 2: FINE-TUNING ---
+    print("\n=== PHASE 2: FINE-TUNING (Tout Dégelé) ===")
+    freeze_encoder(model, freeze=False)
+    
+    args_phase2 = TrainingArguments(
+        output_dir=os.path.join(OUTPUT_DIR, "phase2_finetuning"),
+        learning_rate=LR_FINE_TUNING,
+        num_train_epochs=EPOCHS_FINE_TUNING,
         per_device_train_batch_size=BATCH_SIZE,
         per_device_eval_batch_size=BATCH_SIZE,
         save_total_limit=2,
@@ -79,21 +114,24 @@ def main():
         push_to_hub=False,
         dataloader_pin_memory=torch.cuda.is_available(),
         report_to=["tensorboard"],
-        logging_dir=os.path.join(OUTPUT_DIR, "logs"),
+        logging_dir=os.path.join(OUTPUT_DIR, "logs", "phase2"),
     )
 
-    # 6. Trainer
-    trainer = Trainer(
+    trainer_phase2 = Trainer(
         model=model,
-        args=training_args,
+        args=args_phase2,
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
         compute_metrics=compute_metrics,
     )
-
-    # 7. Train
-    print("Début de l'entraînement...")
-    trainer.train()
+    
+    trainer_phase2.train()
+    
+    # Save final model
+    final_save_path = os.path.join(OUTPUT_DIR, "final_model")
+    trainer_phase2.save_model(final_save_path)
+    processor.save_pretrained(final_save_path)
+    print(f"Modèle final sauvegardé dans {final_save_path}")
 
 if __name__ == "__main__":
     main()

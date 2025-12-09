@@ -9,9 +9,15 @@ OUTPUT_DIR = "./segformer_montagne_output"
 MODEL_CHECKPOINT = "nvidia/mit-b0"
 
 # --- HYPERPARAMETERS ---
+# --- HYPERPARAMETERS ---
 LR = 0.00006
 BATCH_SIZE = 4  # Ajuster selon VRAM (4 pour 8GB VRAM)
-EPOCHS = 10
+EPOCHS_FEATURE_EXTRACTION = 5
+EPOCHS_FINE_TUNING = 45
+
+# Learning Rates spécifiques
+LR_FEATURE_EXTRACTION = 1e-3  # Plus élevé pour la tête (Decoder)
+LR_FINE_TUNING = 5e-5         # Plus faible pour tout le modèle
 
 # --- IMAGE PROCESSING ---
 TARGET_W = 1024

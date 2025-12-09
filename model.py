@@ -17,3 +17,14 @@ def get_model(model_checkpoint, id2label, label2id):
         label2id=label2id,
         ignore_mismatched_sizes=True,
     )
+
+def freeze_encoder(model, freeze=True):
+    """
+    Gèle ou dégèle l'encodeur (backbone) du modèle SegFormer.
+    """
+    # L'encodeur de SegFormer est accessible via model.segformer.encoder
+    for param in model.segformer.encoder.parameters():
+        param.requires_grad = not freeze
+    
+    status = "gelé" if freeze else "dégelé"
+    print(f"Encodeur {status}.")
