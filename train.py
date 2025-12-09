@@ -78,6 +78,8 @@ def main():
         remove_unused_columns=False,
         push_to_hub=False,
         dataloader_pin_memory=torch.cuda.is_available(),
+        report_to=["tensorboard"],
+        logging_dir=os.path.join(OUTPUT_DIR, "logs"),
     )
 
     # 6. Trainer

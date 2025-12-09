@@ -8,3 +8,4 @@ numpy
 accelerate
 albumentations
 opencv-python
+tensorboardX
